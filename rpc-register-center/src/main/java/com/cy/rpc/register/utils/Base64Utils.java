@@ -23,4 +23,9 @@ public class Base64Utils {
             return null;
         }
     }
+
+
+    public static void main(String[] args){
+        System.out.println(getDigest("test:123456"));
+    }
 }

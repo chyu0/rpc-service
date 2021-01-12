@@ -21,22 +21,24 @@ public class ZookeeperProperties{
     /**
      * 连接地址，多个用逗号分隔
      */
-    private String serverLists;
+    private String serverLists = "127.0.0.1:2181";
 
     /**
      * application name，与rpc service name对应
      */
-    private String appName;
-
-    /**
-     * 节点自身令牌
-     */
-    private String userNameAndPassword;
+    private String appName = "server";
     /**
      * 注册中心namespace
      */
     private String namespace = "rpc-service/register";
-
+    /**
+     * 连接zk的权限digest，可以理解为zk server用户名和密码
+     */
+    private String zkDigest = "chenyu:chenyutest";
+    /**
+     * 创建节点digest，只有只读权限，给客户端用
+     */
+    private String createNodeUserAndPsd = "client:123456";
     /**
      * 等待重试的间隔时间的初始值.
      * 单位毫秒.

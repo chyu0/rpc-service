@@ -1,7 +1,6 @@
 package com.cy.rpc.register.curator;
 
 import com.cy.rpc.register.properties.ZookeeperProperties;
-import com.cy.rpc.register.utils.Base64Utils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
@@ -11,11 +10,12 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.utils.CloseableUtils;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.data.ACL;
-import org.apache.zookeeper.data.Id;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -39,7 +39,7 @@ public class ZookeeperClientFactory {
 
         //服务端
         if(clients.get(properties.getAppName()) == null) {
-            if(StringUtils.hasText(properties.getUserNameAndPassword())) {
+            if(StringUtils.hasText(properties.getZkDigest())) {
                 clients.put(properties.getAppName(), buildServer(properties));
             }else {
                 clients.put(properties.getAppName(), defaultClient);
@@ -52,7 +52,7 @@ public class ZookeeperClientFactory {
                 //未添加过
                 if(clients.get(appName) == null) {
                     if(properties.getDigestMap().get(appName) != null) {
-                        clients.put(appName, buildClient(properties, properties.getDigestMap().get(appName)));
+                        clients.put(appName, buildClient(properties, appName));
                     }else {
                         clients.put(appName, defaultClient);
                     }
@@ -86,19 +86,11 @@ public class ZookeeperClientFactory {
      */
     public static CuratorFramework buildServer(ZookeeperProperties properties) {
         CuratorFrameworkFactory.Builder builder = builder(properties);
-        if(!StringUtils.hasText(properties.getUserNameAndPassword())) {
+        if(!StringUtils.hasText(properties.getZkDigest())) {
             return builder.build();
         }
 
-        String digest = Base64Utils.getDigest(properties.getUserNameAndPassword());
-        if(!StringUtils.hasText(properties.getUserNameAndPassword())) {
-            return builder.build();
-        }
-
-        ACLProvider aclProvider = buildAclProvider(digest,
-                Arrays.asList(ZooDefs.Perms.CREATE, ZooDefs.Perms.WRITE, ZooDefs.Perms.DELETE, ZooDefs.Perms.READ));
-
-        return builder.aclProvider(aclProvider).build();
+        return builder.aclProvider(buildDefaultAclProvider()).authorization("digest", properties.getZkDigest().getBytes()).build();
     }
 
     /**
@@ -115,11 +107,13 @@ public class ZookeeperClientFactory {
             return builder.build();
         }
 
-        if(properties.getDigestMap().get(appName) == null) {
+        String digest = properties.getDigestMap().get(appName);
+
+        if(digest == null) {
             return builder.build();
         }
 
-        return builder.aclProvider(buildAclProvider(properties.getDigestMap().get(appName), Collections.singletonList(ZooDefs.Perms.READ))).build();
+        return builder.aclProvider(buildDefaultAclProvider()).authorization("digest", digest.getBytes()).build();
     }
 
     /**
@@ -141,29 +135,16 @@ public class ZookeeperClientFactory {
         return builder;
     }
 
-    /**
-     * 构建一个权限控制对象，包含读，写，创建的权限，digest是加密后的令牌，作用于服务端
-     * @return
-     */
-    private static ACLProvider buildAclProvider(String digest, List<Integer> perms) {
-        if(CollectionUtils.isEmpty(perms)) {
-            return null;
-        }
-
-        List<ACL> aclList = new ArrayList<>();
-        for(Integer perm : perms) {
-            aclList.add(new ACL(perm, new Id("digest", digest)));
-        }
-
+    private static ACLProvider buildDefaultAclProvider() {
         return new ACLProvider() {
             @Override
             public List<ACL> getDefaultAcl() {
-                return aclList;
+                return ZooDefs.Ids.CREATOR_ALL_ACL;
             }
 
             @Override
-            public List<ACL> getAclForPath(final String path) {
-                return aclList;
+            public List<ACL> getAclForPath(String s) {
+                return ZooDefs.Ids.CREATOR_ALL_ACL;
             }
         };
     }
