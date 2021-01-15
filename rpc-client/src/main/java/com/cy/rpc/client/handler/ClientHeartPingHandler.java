@@ -28,18 +28,13 @@ public class ClientHeartPingHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        log.info("ClientHeartPongHandler 断开连接，重连");
-
         //本地地址
         SocketChannel socketChannel = (SocketChannel) ctx.channel();
         String address = socketChannel.localAddress().toString();
 
         List<Client> clients = ClientFactory.get(appId);
         Optional<Client> clientOpt = clients.stream().filter(item -> address.equals(item.getLocalAddress())).findFirst();
-        if(clientOpt.isPresent()) {
-            ClientFactory.remove(appId, clientOpt.get());
-            clientOpt.get().connect();;
-        }
+        clientOpt.ifPresent(client -> ClientFactory.remove(appId, client));
         ctx.close();
         ctx.channel().close();
     }

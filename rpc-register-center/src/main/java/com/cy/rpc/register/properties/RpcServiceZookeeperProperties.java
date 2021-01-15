@@ -15,8 +15,7 @@ import java.util.Map;
 @Getter
 @Setter
 @ConfigurationProperties(prefix = "zk.rpc")
-@Configuration
-public class ZookeeperProperties{
+public class RpcServiceZookeeperProperties {
 
     /**
      * 连接地址，多个用逗号分隔

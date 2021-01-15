@@ -9,11 +9,14 @@ import com.cy.rpc.common.constant.MessageConstant;
 import com.cy.rpc.common.exception.RpcException;
 import com.cy.rpc.common.payload.MethodPayload;
 import com.cy.rpc.common.payload.ResultPayload;
+import com.cy.rpc.register.curator.ZookeeperClientFactory;
+import com.cy.rpc.register.framework.ServiceCuratorFramework;
 import io.netty.buffer.Unpooled;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -31,19 +34,29 @@ import java.util.UUID;
 @Slf4j
 public class DefaultProxy implements InvocationHandler {
 
-    private String appId;
-
     private String serviceName;
 
-    public DefaultProxy(String localAddress, String serviceName) {
-        this.appId = localAddress;
+    private static final String SERVICE_INTERFACE_PATH = "/interface/";
+
+    public DefaultProxy(String serviceName) {
         this.serviceName = serviceName;
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args){
 
-        List<Client> clientList = ClientFactory.get(appId);
+        Class<?> clazz = method.getDeclaringClass();
+        ServiceCuratorFramework curatorFramework = ZookeeperClientFactory.getDefaultClient();
+
+        log.info("clazz ------->{}", clazz);
+        List<String> appId = curatorFramework.getChildren(SERVICE_INTERFACE_PATH + clazz.getName(), null);
+
+        log.info("appId : {}, class ： {}", appId, clazz.getName());
+        if(CollectionUtils.isEmpty(appId)) {
+            throw new RpcException(10001, "无法找到appId");
+        }
+
+        List<Client> clientList = ClientFactory.get(appId.get(new Random().nextInt(appId.size())));
         if(clientList == null || clientList.size() == 0) {
             throw new RpcException(10001, "远程连接已关闭" + appId);
         }

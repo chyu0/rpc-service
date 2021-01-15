@@ -1,9 +1,8 @@
 package com.cy.rpc.client.annoation;
 
+import com.cy.rpc.client.cache.ServiceCache;
 import com.cy.rpc.client.proxy.RpcProxyFactoryBean;
 import com.cy.rpc.common.annotation.RpcService;
-import com.cy.rpc.common.enums.RpcErrorEnum;
-import com.cy.rpc.common.exception.RpcException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -17,6 +16,7 @@ import org.springframework.util.Assert;
 
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.ServiceLoader;
 import java.util.Set;
 
 /**
@@ -86,14 +86,20 @@ public class RpcServiceScanner extends ClassPathBeanDefinitionScanner {
                     //如果不是ScannedGenericBeanDefinition， 直接取默认值
                     if(!(candidate instanceof ScannedGenericBeanDefinition)) {
                         processBeanDefinition(candidate, beanNames[defaultIndex], rpcService.value()[defaultIndex]);
-                        beanDefinitions.add(registryBeanDefinition(candidate, rpcService.defaultValue()));
+                        BeanDefinitionHolder holder = registryBeanDefinition(candidate, rpcService.defaultValue(), clazz);
+                        if(holder != null) {
+                            beanDefinitions.add(holder);
+                        }
                         continue;
                     }
 
                     for(int index = 0; index < beanNames.length; index++) {
                         BeanDefinition beanDefinition = (BeanDefinition)((ScannedGenericBeanDefinition) candidate).clone();
                         processBeanDefinition(beanDefinition, beanNames[index], rpcService.value()[index]);
-                        beanDefinitions.add(registryBeanDefinition(beanDefinition, beanNames[index]));
+                        BeanDefinitionHolder holder = registryBeanDefinition(beanDefinition, beanNames[index], clazz);
+                        if(holder != null) {
+                            beanDefinitions.add(holder);
+                        }
                     }
 
                 }catch (Exception e){
@@ -102,8 +108,6 @@ public class RpcServiceScanner extends ClassPathBeanDefinitionScanner {
 
             }
         }
-
-//        Set<BeanDefinitionHolder> beanDefinitions = super.doScan(basePackages);
 
         if (beanDefinitions.isEmpty()) {
             logger.warn("没有找到basePackage:" + Arrays.toString(basePackages));
@@ -127,22 +131,9 @@ public class RpcServiceScanner extends ClassPathBeanDefinitionScanner {
             logger.error(" processBeanDefinitions 异常，找不到appId的配置, className 为空");
             return;
         }
-        String appId;
-        if(className.contains("MyService")) {
-            appId = "rpc-server-test";
-        }else {
-            appId = "rpc-server2-test";
-        }
 
         definition.getConstructorArgumentValues().addGenericArgumentValue(className);
-
-        if(StringUtils.isBlank(appId)) {
-            logger.error("className : "+ className +", processBeanDefinitions 异常，找不到appId的配置");
-            return;
-        }
-
         definition.getPropertyValues().add(INTERFACE_CLASS, Class.forName(className));
-        definition.getPropertyValues().add(APP_ID, appId);
         definition.getPropertyValues().add(SERVICE_NAME, StringUtils.isBlank(serviceName) ? beanName : serviceName);
 
         genericBeanDefinition.setBeanClass(RpcProxyFactoryBean.class);
@@ -156,8 +147,8 @@ public class RpcServiceScanner extends ClassPathBeanDefinitionScanner {
      * @param beanName
      * @return
      */
-    private BeanDefinitionHolder registryBeanDefinition(BeanDefinition candidate, String beanName) {
-        Assert.notNull(getRegistry(), "Registry can not by null");
+    private BeanDefinitionHolder registryBeanDefinition(BeanDefinition candidate, String beanName, Class<?> clazz) {
+        Assert.notNull(getRegistry(), "Registry can not be null");
         if (candidate instanceof AbstractBeanDefinition) {
             postProcessBeanDefinition((AbstractBeanDefinition) candidate, beanName);
         }
@@ -166,20 +157,30 @@ public class RpcServiceScanner extends ClassPathBeanDefinitionScanner {
             AnnotationConfigUtils.processCommonDefinitionAnnotations((AnnotatedBeanDefinition) candidate);
         }
 
-        if (checkCandidate(beanName, candidate)) {
+        if (!checkBeanName(clazz) && checkCandidate(beanName, candidate)) {
+            //把所有服务放到ServiceCache内
+            ServiceCache.putInterface(clazz.getName());
             BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(candidate, beanName);
             registerBeanDefinition(definitionHolder, getRegistry());
             return definitionHolder;
         }
 
-        throw new RpcException(RpcErrorEnum.INNER_ERROR, "注册bean失败，beanName已重复，beanName : " + beanName);
+        return null;
+    }
+
+    /**
+     * 判断bean是否被实现
+     * @param beanClass
+     * @return
+     */
+    private boolean checkBeanName(Class<?> beanClass) {
+        ServiceLoader<?> serviceLoader = ServiceLoader.load(beanClass);
+        return serviceLoader.iterator().hasNext();
     }
 
     @Override
     protected boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {
         return beanDefinition.getMetadata().isInterface() && beanDefinition.getMetadata().isIndependent();
     }
-
-
 
 }

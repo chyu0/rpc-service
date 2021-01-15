@@ -22,6 +22,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.cy.rpc.client</groupId>
+            <artifactId>rpc-client</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.cy.rpc.server</groupId>
             <artifactId>rpc-server</artifactId>
             <version>0.0.1-SNAPSHOT</version>
@@ -30,12 +36,6 @@
         <dependency>
             <groupId>com.cy.rpc.server.facade</groupId>
             <artifactId>rpc-server-facade</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.cy.rpc.reg</groupId>
-            <artifactId>rpc-register-center</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
 

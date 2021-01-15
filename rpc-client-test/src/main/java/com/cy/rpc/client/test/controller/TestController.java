@@ -27,7 +27,7 @@ public class TestController {
         myService.getName("哈哈哈哈");
         myService2.getName("aaaaa");
 
-        facadeServer.queryName();
+//        facadeServer.queryName();
 
         return myService.getName();
     }

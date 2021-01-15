@@ -1,6 +1,8 @@
 package com.cy.rpc.client.annoation;
 
+import com.cy.rpc.register.curator.ZookeeperClientFactory;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.curator.framework.CuratorFramework;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.ResourceLoaderAware;
@@ -52,4 +54,5 @@ public class RpcServiceRegistrar implements ImportBeanDefinitionRegistrar, Resou
     public void setEnvironment(Environment environment) {
         this.environment = environment;
     }
+
 }

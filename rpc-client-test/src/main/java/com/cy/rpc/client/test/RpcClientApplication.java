@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 @EnableRpcService(mode = RpcMode.CLIENT)
-@RpcClientScan(basePackages = {"com.*"})
+@RpcClientScan(basePackages = {"com.cy.*"})
 public class RpcClientApplication {
 
     public static void main(String[] args) {

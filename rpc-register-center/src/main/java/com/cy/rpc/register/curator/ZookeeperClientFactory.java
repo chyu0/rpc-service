@@ -1,6 +1,8 @@
 package com.cy.rpc.register.curator;
 
-import com.cy.rpc.register.properties.ZookeeperProperties;
+import com.cy.rpc.register.framework.ServiceCuratorFramework;
+import com.cy.rpc.register.properties.RpcServiceZookeeperProperties;
+import com.cy.rpc.register.utils.Base64Utils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
@@ -10,12 +12,11 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.utils.CloseableUtils;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.data.ACL;
+import org.apache.zookeeper.data.Id;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -27,64 +28,84 @@ import java.util.concurrent.TimeUnit;
 public class ZookeeperClientFactory {
 
     @Getter
-    private static final Map<String, CuratorFramework> clients = new ConcurrentHashMap<>(new HashMap<>());
+    private static final Map<String, ServiceCuratorFramework> clients = new ConcurrentHashMap<>(new HashMap<>());
 
+    @Getter
+    private static ServiceCuratorFramework defaultClient = null;
     /**
      * 初始化
      * @param properties
      */
-    public static void init(ZookeeperProperties properties, List<String> clientAppNames) {
+    public static void init(RpcServiceZookeeperProperties properties) {
         //默认连接
-        CuratorFramework defaultClient = builder(properties).build();
+        if(defaultClient == null) {
+            defaultClient = new ServiceCuratorFramework(builder(properties).build());
+            defaultClient.getClient().start();
+        }
 
         //服务端
         if(clients.get(properties.getAppName()) == null) {
+            //设置访问权限
             if(StringUtils.hasText(properties.getZkDigest())) {
-                clients.put(properties.getAppName(), buildServer(properties));
+                List<ACL> aclList = new ArrayList<>();
+                aclList.add(buildAllACL(properties.getZkDigest()));
+                if(StringUtils.hasText(properties.getCreateNodeUserAndPsd())) {
+                     aclList.add(buildReadOnlyACL(properties.getCreateNodeUserAndPsd()));
+                }
+                clients.put(properties.getAppName(), new ServiceCuratorFramework(buildServer(properties), aclList));
             }else {
                 clients.put(properties.getAppName(), defaultClient);
             }
         }
 
         //客户端
-        if(!CollectionUtils.isEmpty(clientAppNames)) {
-            for(String appName : clientAppNames) {
+        if(!CollectionUtils.isEmpty(properties.getDigestMap())) {
+            for(Map.Entry<String, String> appEntry : properties.getDigestMap().entrySet()) {
                 //未添加过
-                if(clients.get(appName) == null) {
-                    if(properties.getDigestMap().get(appName) != null) {
-                        clients.put(appName, buildClient(properties, appName));
-                    }else {
-                        clients.put(appName, defaultClient);
-                    }
+                if(clients.get(appEntry.getKey()) == null) {
+                    clients.put(appEntry.getKey(), new ServiceCuratorFramework(buildClient(properties, appEntry.getValue())));
                 }
             }
         }
 
         //启动所有zk连接
-        for(CuratorFramework framework : clients.values()) {
-            if(framework.getZookeeperClient().isConnected()) {
+        for(ServiceCuratorFramework framework : clients.values()) {
+            if(framework.getClient().getZookeeperClient().isConnected()) {
                 continue;
             }
 
             //启动
-            framework.start();
+            framework.getClient().start();
             try {
-                framework.blockUntilConnected(properties.getMaxSleepTimeMilliseconds() * properties.getMaxRetries(), TimeUnit.MILLISECONDS);
-                if(!framework.getZookeeperClient().isConnected()) {
-                    CloseableUtils.closeQuietly(framework);
+                framework.getClient().blockUntilConnected(properties.getMaxSleepTimeMilliseconds() * properties.getMaxRetries(), TimeUnit.MILLISECONDS);
+                if(!framework.getClient().getZookeeperClient().isConnected()) {
+                    CloseableUtils.closeQuietly(framework.getClient().getZookeeperClient());
                 }
-                log.error("Client failed to connect to zookeeper service");
+                log.info("Client success to connect to zookeeper service");
             } catch (final Exception ex) {
                 log.error("Client failed to connect to zookeeper service : ", ex);
             }
         }
     }
 
+    public static void close() {
+        for(Map.Entry<String, ServiceCuratorFramework> appEntry : clients.entrySet()) {
+            CloseableUtils.closeQuietly(appEntry.getValue().getClient());
+        }
+        clients.clear();
+    }
+
+
+    //获取默认客户端
+    public static ServiceCuratorFramework getCuratorFrameworkByAppName(String appName) {
+        return clients.get(appName) != null ? clients.get(appName) : defaultClient;
+    }
+
     /**
      * 带权限验证
      * @return
      */
-    public static CuratorFramework buildServer(ZookeeperProperties properties) {
+    public static CuratorFramework buildServer(RpcServiceZookeeperProperties properties) {
         CuratorFrameworkFactory.Builder builder = builder(properties);
         if(!StringUtils.hasText(properties.getZkDigest())) {
             return builder.build();
@@ -97,19 +118,13 @@ public class ZookeeperClientFactory {
      * 带权限验证
      * @return
      */
-    private static CuratorFramework buildClient(ZookeeperProperties properties, String appName) {
+    private static CuratorFramework buildClient(RpcServiceZookeeperProperties properties, String digest) {
         CuratorFrameworkFactory.Builder builder = builder(properties);
-        if(!StringUtils.hasText(appName)) {
+        if(!StringUtils.hasText(digest)) {
             return builder.build();
         }
 
         if(CollectionUtils.isEmpty(properties.getDigestMap())) {
-            return builder.build();
-        }
-
-        String digest = properties.getDigestMap().get(appName);
-
-        if(digest == null) {
             return builder.build();
         }
 
@@ -120,7 +135,7 @@ public class ZookeeperClientFactory {
      * 构建一个基本的 curator framework builder对象
      * @return
      */
-    public static CuratorFrameworkFactory.Builder builder(ZookeeperProperties properties) {
+    private static CuratorFrameworkFactory.Builder builder(RpcServiceZookeeperProperties properties) {
         CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder();
         builder.connectString(properties.getServerLists()).namespace(properties.getNamespace())
                 .retryPolicy(new ExponentialBackoffRetry(properties.getBaseSleepTimeMilliseconds(), properties.getMaxRetries(), properties.getMaxSleepTimeMilliseconds()));
@@ -147,5 +162,36 @@ public class ZookeeperClientFactory {
                 return ZooDefs.Ids.CREATOR_ALL_ACL;
             }
         };
+    }
+
+
+    /**
+     * 构建一个权限控制对象，只包含读，针对客户端
+     * @return
+     */
+    private static ACL buildReadOnlyACL(String digest) {
+        if(org.apache.commons.lang3.StringUtils.isBlank(digest)) {
+            return null;
+        }
+
+        String userName = digest.split(":")[0];
+        String base64Digest = Base64Utils.getDigest(digest);
+
+        return new ACL(ZooDefs.Perms.READ, new Id("digest", userName + ":" + base64Digest));
+    }
+
+    /**
+     * 构建一个权限控制对象，包含读，写，创建的权限，digest是加密后的令牌，作用于服务端
+     * @return
+     */
+    private static ACL buildAllACL(String zkDigest) {
+        if(org.apache.commons.lang3.StringUtils.isBlank(zkDigest)) {
+            return null;
+        }
+
+        String userName = zkDigest.split(":")[0];
+        String base64Digest = Base64Utils.getDigest(zkDigest);
+
+        return new ACL(ZooDefs.Perms.ALL, new Id("digest", userName + ":" + base64Digest));
     }
 }

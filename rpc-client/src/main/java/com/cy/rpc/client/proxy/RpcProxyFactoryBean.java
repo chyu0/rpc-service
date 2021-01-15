@@ -22,11 +22,6 @@ public class RpcProxyFactoryBean<T> implements FactoryBean<T> {
     private Class<T> interfaceClass;
 
     /**
-     * 本地地址
-     */
-    private String appId;
-
-    /**
      * 服务名称
      */
     private String serviceName;
@@ -39,7 +34,7 @@ public class RpcProxyFactoryBean<T> implements FactoryBean<T> {
     @Override
     public T getObject() {
         return CastUtils.cast(Proxy.newProxyInstance(DefaultProxy.class.getClassLoader(),
-                new Class<?>[]{interfaceClass}, new DefaultProxy(appId, serviceName)));
+                new Class<?>[]{interfaceClass}, new DefaultProxy(serviceName)));
     }
 
     @Override
