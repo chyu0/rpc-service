@@ -26,7 +26,7 @@ import java.util.Set;
 public class RpcServiceScanner extends ClassPathBeanDefinitionScanner {
 
     private static final String INTERFACE_CLASS = "interfaceClass";
-    private static final String APP_ID = "appId";
+    private static final String APP_NAME = "appName";
     private static final String SERVICE_NAME = "serviceName";
 
     private final ScopeMetadataResolver scopeMetadataResolver = new AnnotationScopeMetadataResolver();
@@ -128,7 +128,7 @@ public class RpcServiceScanner extends ClassPathBeanDefinitionScanner {
         String className = definition.getBeanClassName();
 
         if(StringUtils.isBlank(className)) {
-            logger.error(" processBeanDefinitions 异常，找不到appId的配置, className 为空");
+            logger.error(" processBeanDefinitions 异常，找不到appName的配置, className 为空");
             return;
         }
 

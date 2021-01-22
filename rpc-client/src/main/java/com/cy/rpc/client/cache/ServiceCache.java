@@ -12,7 +12,7 @@ public class ServiceCache {
 
     private static final Set<String> interfaceCaches = Collections.synchronizedSet(new HashSet<>());
 
-    private static final Map<String, Set<String>> appClientCaches = Collections.synchronizedMap(new HashMap<>());
+    private static final Map<String, Set<String>> appHostCaches = Collections.synchronizedMap(new HashMap<>());
 
     public static void putInterface(String serviceName) {
         interfaceCaches.add(serviceName);
@@ -22,39 +22,38 @@ public class ServiceCache {
         return interfaceCaches;
     }
 
-    public static void putAppCaches(String appId, String hostname) {
-        appClientCaches.computeIfAbsent(appId, k -> new HashSet<>()).add(hostname);
+    public static void putAppCaches(String appName, String hostname) {
+        appHostCaches.computeIfAbsent(appName, k -> new HashSet<>()).add(hostname);
     }
 
-    public static void putAllAppCaches(String appId, List<String> hostnames) {
+    public static void putAllAppHostCaches(String appName, Collection<String> hostnames) {
         if(!CollectionUtils.isEmpty(hostnames)) {
-            appClientCaches.computeIfAbsent(appId, k -> new HashSet<>()).addAll(hostnames);
+            appHostCaches.computeIfAbsent(appName, k -> new HashSet<>()).addAll(hostnames);
         }
     }
 
-
-    public static Set<String> getAppCaches(String appId) {
-        return appClientCaches.get(appId);
+    public static Set<String> getAppCaches(String appName) {
+        return appHostCaches.get(appName);
     }
 
 
-    public static void removeAppCache(String appId, String hostname) {
-        if(appClientCaches.get(appId) != null) {
-            appClientCaches.get(appId).remove(hostname);
-            if(appClientCaches.get(appId).size() == 0) {
-                appClientCaches.remove(appId);
+    public static void removeAppCache(String appName, String hostname) {
+        if(appHostCaches.get(appName) != null) {
+            appHostCaches.get(appName).remove(hostname);
+            if(appHostCaches.get(appName).size() == 0) {
+                appHostCaches.remove(appName);
             }
         }
     }
 
-    public static void removeAppCache(String appId) {
-        if(appClientCaches.get(appId) != null) {
-            appClientCaches.remove(appId);
+    public static void removeAppCache(String appName) {
+        if(appHostCaches.get(appName) != null) {
+            appHostCaches.remove(appName);
         }
     }
 
     public static Set<String> getAppCaches() {
-        return appClientCaches.keySet();
+        return appHostCaches.keySet();
     }
 
 }

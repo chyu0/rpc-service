@@ -9,14 +9,12 @@ import com.cy.rpc.common.constant.MessageConstant;
 import com.cy.rpc.common.exception.RpcException;
 import com.cy.rpc.common.payload.MethodPayload;
 import com.cy.rpc.common.payload.ResultPayload;
-import com.cy.rpc.register.curator.ZookeeperClientFactory;
-import com.cy.rpc.register.framework.ServiceCuratorFramework;
+import com.cy.rpc.register.loader.ServiceRegister;
 import io.netty.buffer.Unpooled;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -46,20 +44,16 @@ public class DefaultProxy implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args){
 
         Class<?> clazz = method.getDeclaringClass();
-        ServiceCuratorFramework curatorFramework = ZookeeperClientFactory.getDefaultClient();
 
         log.info("clazz ------->{}", clazz);
-        List<String> appId = curatorFramework.getChildren(SERVICE_INTERFACE_PATH + clazz.getName(), null);
+        String appName = ServiceRegister.getAppName(clazz.getName());
 
-        log.info("appId : {}, class ： {}", appId, clazz.getName());
-        if(CollectionUtils.isEmpty(appId)) {
-            throw new RpcException(10001, "无法找到appId");
-        }
-
-        List<Client> clientList = ClientFactory.get(appId.get(new Random().nextInt(appId.size())));
+        List<Client> clientList = ClientFactory.get(appName);
         if(clientList == null || clientList.size() == 0) {
-            throw new RpcException(10001, "远程连接已关闭" + appId);
+            throw new RpcException(10001, "远程连接已关闭" + appName);
         }
+
+        log.info("appName : {}, class ： {}, clientList : {}", appName, clazz.getName(), clientList);
 
         RpcService rpcService = method.getDeclaringClass().getAnnotation(RpcService.class);
         if(rpcService == null) {

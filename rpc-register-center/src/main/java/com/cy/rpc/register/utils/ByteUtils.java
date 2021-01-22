@@ -1,4 +1,4 @@
-package com.cy.rpc.common.utils;
+package com.cy.rpc.register.utils;
 
 import java.io.*;
 

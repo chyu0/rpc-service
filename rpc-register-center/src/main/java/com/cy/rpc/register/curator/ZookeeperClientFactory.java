@@ -2,7 +2,6 @@ package com.cy.rpc.register.curator;
 
 import com.cy.rpc.register.framework.ServiceCuratorFramework;
 import com.cy.rpc.register.properties.RpcServiceZookeeperProperties;
-import com.cy.rpc.register.utils.Base64Utils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
@@ -13,9 +12,11 @@ import org.apache.curator.utils.CloseableUtils;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Id;
+import org.apache.zookeeper.server.auth.DigestAuthenticationProvider;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -174,10 +175,11 @@ public class ZookeeperClientFactory {
             return null;
         }
 
-        String userName = digest.split(":")[0];
-        String base64Digest = Base64Utils.getDigest(digest);
-
-        return new ACL(ZooDefs.Perms.READ, new Id("digest", userName + ":" + base64Digest));
+        try {
+            return new ACL(ZooDefs.Perms.READ, new Id("digest", DigestAuthenticationProvider.generateDigest(digest)));
+        }catch (Exception e) {
+            return null;
+        }
     }
 
     /**
@@ -189,9 +191,10 @@ public class ZookeeperClientFactory {
             return null;
         }
 
-        String userName = zkDigest.split(":")[0];
-        String base64Digest = Base64Utils.getDigest(zkDigest);
-
-        return new ACL(ZooDefs.Perms.ALL, new Id("digest", userName + ":" + base64Digest));
+        try {
+            return new ACL(ZooDefs.Perms.ALL, new Id("digest", DigestAuthenticationProvider.generateDigest(zkDigest)));
+        } catch (NoSuchAlgorithmException e) {
+            return null;
+        }
     }
 }

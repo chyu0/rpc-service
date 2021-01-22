@@ -2,9 +2,10 @@ package com.cy.rpc.server.configuration;
 
 import com.cy.rpc.common.enums.RpcErrorEnum;
 import com.cy.rpc.common.exception.RpcException;
+import com.cy.rpc.common.utils.IpUtil;
 import com.cy.rpc.register.curator.ZookeeperClientFactory;
 import com.cy.rpc.register.framework.ServiceCuratorFramework;
-import com.cy.rpc.register.loader.ServerServiceRegister;
+import com.cy.rpc.register.loader.ServiceRegister;
 import com.cy.rpc.register.properties.RpcServiceZookeeperProperties;
 import com.cy.rpc.server.Server;
 import com.cy.rpc.server.properties.RpcServerConfigurationProperties;
@@ -34,10 +35,6 @@ public class RpcServerConfiguration {
     @Resource
     private RpcServiceZookeeperProperties rpcServiceZookeeperProperties;
 
-    private static final String SERVICE_INTERFACE_PATH = "/interface";
-
-    private static final String SERVER_PATH = "/server";
-
     @PostConstruct
     public void init() {
 
@@ -60,15 +57,8 @@ public class RpcServerConfiguration {
         //初始化zk
         ZookeeperClientFactory.init(rpcServiceZookeeperProperties);
 
-        //初始化根节点
-        ServiceCuratorFramework curatorFramework = ZookeeperClientFactory.getDefaultClient();
-        curatorFramework.persist(SERVER_PATH, null);
-        curatorFramework.persist(SERVICE_INTERFACE_PATH, null);
-
         //注册接口
-        ServerServiceRegister.registerInterface(rpcServiceZookeeperProperties.getAppName());
-        //注册服务
-        ServerServiceRegister.registerServer(rpcServiceZookeeperProperties.getAppName(), properties.getPort());
+        ServiceRegister.registerProviderInterface(rpcServiceZookeeperProperties.getAppName(), IpUtil.getHostIP(), properties.getPort());
 
     }
 

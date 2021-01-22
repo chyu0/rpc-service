@@ -14,7 +14,6 @@ import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Stat;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -55,7 +54,7 @@ public class ServiceCuratorFramework {
             byte[] bytes = builder.forPath(path);
             return new String(bytes);
         } catch (Exception e) {
-            log.error("ServiceCuratorFramework查询zk节点失败！path:{}", path, e);
+            log.error("ServiceCuratorFramework查询zk节点失败！path:{},message:{}", path, e.getMessage());
             return null;
         }
     }
@@ -74,7 +73,7 @@ public class ServiceCuratorFramework {
             Stat stat = existsBuilder.forPath(path);
             return stat != null;
         } catch (Exception e) {
-            log.error("ServiceCuratorFramework判断zk节点是否失败异常！path:{}", path, e);
+            log.error("ServiceCuratorFramework判断zk节点是否失败异常！path:{}, message:{}", path, e.getMessage());
             return false;
         }
     }
@@ -97,7 +96,7 @@ public class ServiceCuratorFramework {
                 update(path, value);
             }
         } catch (Exception e) {
-            log.error("ServiceCuratorFramework节点持久化失败！path:{}", path, e);
+            log.error("ServiceCuratorFramework节点持久化失败！path:{}，message:{}", path, e.getMessage());
         }
     }
 
@@ -119,7 +118,7 @@ public class ServiceCuratorFramework {
                 update(path, value);
             }
         } catch (Exception e) {
-            log.error("ServiceCuratorFramework节点持久化失败！path:{}", path, e);
+            log.error("ServiceCuratorFramework节点持久化失败！path:{}, message:{}", path, e.getMessage());
         }
     }
 
@@ -136,7 +135,7 @@ public class ServiceCuratorFramework {
             }
             return builder.forPath(path);
         }catch (Exception e){
-            log.error("ServiceCuratorFramework获取子节点失败！path:{}, value:{}", path, e);
+            log.error("ServiceCuratorFramework获取子节点失败！path:{},  message:{}", path, e.getMessage());
             return Collections.emptyList();
         }
     }
@@ -151,7 +150,7 @@ public class ServiceCuratorFramework {
         try {
             client.inTransaction().check().forPath(path).and().setData().forPath(path, value != null ? value.getBytes(Charsets.UTF_8) : null).and().commit();
         }catch (Exception e){
-            log.error("ServiceCuratorFramework更新节点失败！path:{}, value:{}", path, value, e);
+            log.error("ServiceCuratorFramework更新节点失败！path:{}, value:{}, message:{}", path, value, e.getMessage());
         }
     }
 
@@ -163,7 +162,7 @@ public class ServiceCuratorFramework {
         try {
             client.delete().forPath(path);
         }catch (Exception e){
-            log.error("ServiceCuratorFramework删除节点失败！path:{}", path, e);
+            log.error("ServiceCuratorFramework删除节点失败！path:{}, message:{}", path, e.getMessage());
         }
     }
 

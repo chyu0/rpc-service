@@ -20,10 +20,10 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class ClientHeartPingHandler extends ChannelInboundHandlerAdapter {
 
-    private final String appId;
+    private final String appName;
 
-    public ClientHeartPingHandler(String appId) {
-        this.appId = appId;
+    public ClientHeartPingHandler(String appName) {
+        this.appName = appName;
     }
 
     @Override
@@ -32,11 +32,16 @@ public class ClientHeartPingHandler extends ChannelInboundHandlerAdapter {
         SocketChannel socketChannel = (SocketChannel) ctx.channel();
         String address = socketChannel.localAddress().toString();
 
-        List<Client> clients = ClientFactory.get(appId);
+        List<Client> clients = ClientFactory.get(appName);
         Optional<Client> clientOpt = clients.stream().filter(item -> address.equals(item.getLocalAddress())).findFirst();
-        clientOpt.ifPresent(client -> ClientFactory.remove(appId, client));
-        ctx.close();
-        ctx.channel().close();
+        if(clientOpt.isPresent()) {
+            Client client = clientOpt.get();
+            //重试
+            client.tryConnect();
+        }else {
+            ctx.close();
+            ctx.channel().close();
+        }
     }
 
 

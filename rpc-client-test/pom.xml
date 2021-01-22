@@ -28,6 +28,12 @@
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.cy.rpc.server</groupId>
+            <artifactId>rpc-server</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
 
         <dependency>
             <groupId>com.cy.rpc.server.facade</groupId>
