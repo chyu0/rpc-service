@@ -107,7 +107,7 @@ public class Client {
             log.error("连接超时，断开连接，client:{}" , this);
             ClientFactory.remove(appName, this);
             //关闭通道
-            socketChannel.disconnect();
+            socketChannel.close();
             return ;
         }
 
