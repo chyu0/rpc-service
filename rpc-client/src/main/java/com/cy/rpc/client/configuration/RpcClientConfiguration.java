@@ -1,8 +1,7 @@
 package com.cy.rpc.client.configuration;
 
-import com.cy.rpc.client.Client;
 import com.cy.rpc.client.cache.ServiceCache;
-import com.cy.rpc.client.sockect.ClientFactory;
+import com.cy.rpc.client.cluster.ClientConnect;
 import com.cy.rpc.common.utils.IpUtil;
 import com.cy.rpc.register.curator.ZookeeperClientFactory;
 import com.cy.rpc.register.loader.ServiceRegister;
@@ -15,6 +14,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -37,6 +37,8 @@ public class RpcClientConfiguration {
         //初始化消费者接口
         ZookeeperClientFactory.init(zookeeperProperties);
 
+        Map<String, Set<String>> appHostMap = new HashMap<>();
+
         for(String interfaceCache : interfaceCaches) {
             //注册到消费者
             ServiceRegister.registerConsumerInterface(interfaceCache, zookeeperProperties.getAppName(), IpUtil.getHostIP());
@@ -50,33 +52,35 @@ public class RpcClientConfiguration {
                         Set<String> newAppName = ServiceRegister.getHostNames(interfaceCache, this).get(appName);
                         log.info("检测到子节点变更，path: {}，oldAppName: {}，newAppName: {}", event.getPath(), oldAppName, newAppName);
                         //删除可以无需监听，ClientHeartPingHandler监听
-                        if(oldAppName.size() < newAppName.size()) {
+                        if(oldAppName == null) {
+                            newAppName.forEach(item -> {
+                                connect(appName, item);
+                            });
+                        }else if(oldAppName.size() < newAppName.size()) {
                             //新增时进行连接
                             newAppName.stream().filter(item -> !oldAppName.contains(item)).collect(Collectors.toList()).forEach(item -> {
-                                if(!ClientFactory.exist(appName, item)) {
-                                    connect(appName, item);
-                                }
+                                log.info("检测到子节点变更，创建新连接，path: {}，oldAppName: {}，newAppName: {}", event.getPath(), oldAppName, newAppName);
+                                connect(appName, item);
                             });
                         }
+                        log.info("检测到子节点变更，处理结束，path: {}，oldAppName: {}，newAppName: {}", event.getPath(), oldAppName, newAppName);
                     }
                 }
             });
 
-            //连接到客户端
-            hostNames.forEach((key, value) -> {
-                ServiceCache.putAllAppHostCaches(key, value);
-                value.forEach(item -> {
-                    if(!ClientFactory.exist(key, item)) {
-                        connect(key, item);
-                    }
-                });
-            });
+            appHostMap.putAll(hostNames);
         }
 
+        //连接到客户端
+        appHostMap.forEach((key, value) -> {
+            value.forEach(item -> {
+                connect(key, item);
+            });
+        });
     }
 
     /**
-     * 连接客户端
+     * 连接客户端，加个同步，虽然貌似没有必要
      * @param appName
      * @param hostName
      */
@@ -86,8 +90,8 @@ public class RpcClientConfiguration {
             if(address.length != 2) {
                 log.warn("服务器地址有误！address:{}", hostName);
             }
-            Client client = new Client(appName, address[0], Integer.parseInt(address[1]));
-            client.toConnect();
+            //添加到集群，并开启客户端连接
+            ClientConnect.connect(appName, address[0], Integer.parseInt(address[1]));
             log.warn("客户端连接成功！address: {}", hostName);
         }catch (Exception e){
             log.error("RPC服务启动异常！", e);

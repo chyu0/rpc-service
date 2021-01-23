@@ -69,19 +69,18 @@ public class RpcServerChannelHandler extends SimpleChannelInboundHandler<MethodP
             //返回结果
             ResultPayload resultPayload = new ResultPayload();
             resultPayload.setRequestId(methodPayload.getRequestId());
-
-            String serviceName = methodPayload.getServiceName();
-            Object service = abstractServiceFactory.getServiceByName(serviceName);
-            if(service == null) {
-                resultPayload.setCode(10003);
-                resultPayload.setMessage("服务未找到！");
-                channelHandlerContext.channel().write(resultPayload);
-                channelHandlerContext.channel().writeAndFlush(Unpooled.copiedBuffer(MessageConstant.FINISH.getBytes()));
-                return;
-            }
-
-            //方法返回具体结果
             try {
+                String serviceName = methodPayload.getServiceName();
+                Object service = abstractServiceFactory.getServiceByName(serviceName);
+                if(service == null) {
+                    resultPayload.setCode(10003);
+                    resultPayload.setMessage("服务未找到！");
+                    channelHandlerContext.channel().write(resultPayload);
+                    channelHandlerContext.channel().writeAndFlush(Unpooled.copiedBuffer(MessageConstant.FINISH.getBytes()));
+                    return;
+                }
+
+                //方法返回具体结果
                 Object[] args = methodPayload.getArgs();
                 Object returnValue = service.getClass().getMethod(methodPayload.getMethod(), methodPayload.getArgsClass()).invoke(service, args);
 
@@ -92,18 +91,20 @@ public class RpcServerChannelHandler extends SimpleChannelInboundHandler<MethodP
 
                 channelHandlerContext.channel().write(resultPayload);
                 channelHandlerContext.channel().writeAndFlush(Unpooled.copiedBuffer(MessageConstant.FINISH.getBytes()));
+
             }catch (RpcException e){
+                log.error("rpc 服务调用异常！", e);
                 resultPayload.setCode(10003);
                 resultPayload.setMessage(e.getMessage());
                 channelHandlerContext.channel().write(resultPayload);
                 channelHandlerContext.channel().writeAndFlush(Unpooled.copiedBuffer(MessageConstant.FINISH.getBytes()));
             } catch (Exception e){
+                log.error("rpc 服务系统异常！", e);
                 resultPayload.setCode(10005);
                 resultPayload.setMessage("接口调用异常！");
                 channelHandlerContext.channel().write(null);
                 channelHandlerContext.channel().writeAndFlush(Unpooled.copiedBuffer(MessageConstant.FINISH.getBytes()));
             }
-
         });
     }
 

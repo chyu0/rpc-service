@@ -16,6 +16,7 @@ public class TestController {
     @GetMapping("/test")
     public String test() throws IOException {
         myService.getName();
+
         return "success";
     }
 }

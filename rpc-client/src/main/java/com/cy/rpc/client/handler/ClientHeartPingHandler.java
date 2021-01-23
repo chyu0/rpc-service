@@ -1,7 +1,8 @@
 package com.cy.rpc.client.handler;
 
-import com.cy.rpc.client.Client;
-import com.cy.rpc.client.sockect.ClientFactory;
+import com.cy.rpc.client.cluster.ClientCluster;
+import com.cy.rpc.client.cluster.ClientClusterCache;
+import com.cy.rpc.client.cluster.ClientConnect;
 import com.cy.rpc.common.constant.MessageConstant;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -9,8 +10,6 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.SocketChannel;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -30,14 +29,10 @@ public class ClientHeartPingHandler extends ChannelInboundHandlerAdapter {
     public void channelInactive(ChannelHandlerContext ctx) {
         //本地地址
         SocketChannel socketChannel = (SocketChannel) ctx.channel();
-        String address = socketChannel.localAddress().toString();
-
-        List<Client> clients = ClientFactory.get(appName);
-        Optional<Client> clientOpt = clients.stream().filter(item -> address.equals(item.getLocalAddress())).findFirst();
-        if(clientOpt.isPresent()) {
-            Client client = clientOpt.get();
-            //重试
-            client.tryConnect();
+        String localAddress = socketChannel.localAddress().toString();
+        ClientCluster cluster = ClientClusterCache.getCluster(appName);
+        if(cluster != null) {
+            ClientConnect.tryConnect(appName, localAddress);
         }else {
             ctx.close();
             ctx.channel().close();

@@ -42,6 +42,10 @@ public class RpcServerConfiguration {
             throw new RpcException(RpcErrorEnum.INNER_ERROR, "丢失 serviceFactory Bean");
         }
 
+        if(properties.getPort() <= 0) {
+            throw new RpcException(RpcErrorEnum.INNER_ERROR, "rpc server port 无效");
+        }
+
         Server server = new Server(support.serviceFactory(), properties.getPort());
         try {
             ServerSocketChannel serverSocketChannel = server.start();

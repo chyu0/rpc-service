@@ -1,7 +1,5 @@
 package com.cy.rpc.client.cache;
 
-import org.springframework.util.CollectionUtils;
-
 import java.util.*;
 
 /**
@@ -26,12 +24,6 @@ public class ServiceCache {
         appHostCaches.computeIfAbsent(appName, k -> new HashSet<>()).add(hostname);
     }
 
-    public static void putAllAppHostCaches(String appName, Collection<String> hostnames) {
-        if(!CollectionUtils.isEmpty(hostnames)) {
-            appHostCaches.computeIfAbsent(appName, k -> new HashSet<>()).addAll(hostnames);
-        }
-    }
-
     public static Set<String> getAppCaches(String appName) {
         return appHostCaches.get(appName);
     }
@@ -44,16 +36,6 @@ public class ServiceCache {
                 appHostCaches.remove(appName);
             }
         }
-    }
-
-    public static void removeAppCache(String appName) {
-        if(appHostCaches.get(appName) != null) {
-            appHostCaches.remove(appName);
-        }
-    }
-
-    public static Set<String> getAppCaches() {
-        return appHostCaches.keySet();
     }
 
 }
