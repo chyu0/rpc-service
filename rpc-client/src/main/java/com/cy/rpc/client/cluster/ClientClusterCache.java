@@ -1,5 +1,7 @@
 package com.cy.rpc.client.cluster;
 
+import com.cy.rpc.client.cache.ConfigCache;
+import com.cy.rpc.client.cache.RpcClientConfig;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -32,7 +34,15 @@ public class ClientClusterCache {
      * @param port 端口
      */
     public static synchronized ClientCluster put(String appName, String remoteAddress, int port) {
-        ClientCluster cluster = clusterMap.computeIfAbsent(appName, k -> new ClientCluster(appName));
+        //实例化一个ClientCluster
+        ClientCluster cluster = clusterMap.computeIfAbsent(appName, k -> {
+            RpcClientConfig rpcClientConfig = ConfigCache.getRpcClientConfig();
+            if(rpcClientConfig == null || rpcClientConfig.getSelector() == null) {
+                return new ClientCluster(appName);
+            }else {
+                return new ClientCluster(appName, rpcClientConfig.getSelector());
+            }
+        });
         cluster.addClient(remoteAddress, port);
         return cluster;
     }

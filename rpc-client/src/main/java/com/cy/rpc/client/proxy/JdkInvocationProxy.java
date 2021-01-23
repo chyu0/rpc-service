@@ -1,6 +1,7 @@
 package com.cy.rpc.client.proxy;
 
 import com.cy.rpc.client.Client;
+import com.cy.rpc.client.cache.ConfigCache;
 import com.cy.rpc.client.cluster.ClientCluster;
 import com.cy.rpc.client.cluster.ClientClusterCache;
 import com.cy.rpc.client.future.FutureFactory;
@@ -32,6 +33,9 @@ import java.util.UUID;
 @Slf4j
 public class JdkInvocationProxy implements InvocationHandler {
 
+    /**
+     * 服务调用名称
+     */
     private String serviceName;
 
     public JdkInvocationProxy(String serviceName) {
@@ -90,7 +94,7 @@ public class JdkInvocationProxy implements InvocationHandler {
         client.getSocketChannel().write(methodPayload);
         client.getSocketChannel().writeAndFlush(Unpooled.copiedBuffer(MessageConstant.FINISH.getBytes()));
 
-        ResultPayload resultPayload = FutureFactory.getData(requestId);
+        ResultPayload resultPayload = FutureFactory.getData(requestId, ConfigCache.getRpcClientConfig().getTimeout());
         log.info("DefaultProxy 接口返回结果："+ resultPayload);
 
         return resultPayload != null ? resultPayload.getResult() : null;

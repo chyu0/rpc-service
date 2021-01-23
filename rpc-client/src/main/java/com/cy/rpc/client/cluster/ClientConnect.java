@@ -1,7 +1,11 @@
 package com.cy.rpc.client.cluster;
 
 import com.cy.rpc.client.Client;
+import com.cy.rpc.client.cache.ConfigCache;
+import com.cy.rpc.client.cache.RetryConnectStrategyConfig;
+import com.cy.rpc.client.cache.RpcClientConfig;
 import com.cy.rpc.client.cache.ServiceCache;
+import com.cy.rpc.client.cluster.retry.AbstractRetryConnectStrategy;
 import io.netty.channel.EventLoopGroup;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -32,7 +36,7 @@ public class ClientConnect {
         //启动客户端连接
         if(!client.connect(cluster.getEventLoopGroup())) {
             log.info("客户端连接失败，准备重试！appName: {}, client: {}", appName, client);
-            executeTryConnect(cluster.getEventLoopGroup(), appName, client);
+            executeRetryConnect(cluster.getEventLoopGroup(), appName, client);
         }
     }
 
@@ -55,7 +59,7 @@ public class ClientConnect {
             return ;
         }
         //客户端重连
-        executeTryConnect(cluster.getEventLoopGroup(), appName, client);
+        executeRetryConnect(cluster.getEventLoopGroup(), appName, client);
     }
 
     /**
@@ -75,16 +79,20 @@ public class ClientConnect {
             return ;
         }
         //客户端重连
-        executeTryConnect(cluster.getEventLoopGroup(), appName, client);
+        executeRetryConnect(cluster.getEventLoopGroup(), appName, client);
     }
 
     /**
      * 客户端重试
      * @param client 客户端连接
      */
-    private static void executeTryConnect(EventLoopGroup eventLoopGroup, String appName, Client client) {
+    private static void executeRetryConnect(EventLoopGroup eventLoopGroup, String appName, Client client) {
+        //获取重试策略的配置
+        RetryConnectStrategyConfig strategyConfig = ConfigCache.getRetryConnectStrategyConfig();
+
         //超过最大重试次数的话，就把这个客户端移除掉，重试的目的一个是为了避免网络波动，服务端短暂下线的情况
-        if(client.getConnectTimes() >= 3) {
+        //正常情况下重试必须存在，否则会有未知的问题
+        if(client.getConnectTimes() >= strategyConfig.getMaxRetryTimes()) {
             log.error("连接超时，断开连接，client:{}" , client);
             //移除该客户端的集群配置
             ClientClusterCache.remove(appName, client.getRemoteAddress(), client.getPort());
@@ -92,15 +100,15 @@ public class ClientConnect {
             return ;
         }
 
-        //默认每10秒重试一次
+        //通过策略计算每次需要等待的时间
         scheduledExecutorService.schedule(() -> {
             log.info("客户端重连开始！appName: {}, client: {}", appName, client.toString());
             if(!client.connect(eventLoopGroup)) {
                 log.warn("客户端重连失败{}次！appName: {}, client: {}", client.getConnectTimes(), appName, client);
-                executeTryConnect(eventLoopGroup, appName, client);
+                executeRetryConnect(eventLoopGroup, appName, client);
             }
             log.info("客户端重连结束！appName: {}, client: {}", appName, client.toString());
-        }, 10, TimeUnit.SECONDS);
+        }, strategyConfig.calculationNextExecuteDelay(client.getConnectTimes()), TimeUnit.MILLISECONDS);
     }
 
 }

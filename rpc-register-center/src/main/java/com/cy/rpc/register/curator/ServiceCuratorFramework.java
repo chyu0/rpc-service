@@ -1,4 +1,4 @@
-package com.cy.rpc.register.framework;
+package com.cy.rpc.register.curator;
 
 import com.google.common.base.Charsets;
 import lombok.Getter;

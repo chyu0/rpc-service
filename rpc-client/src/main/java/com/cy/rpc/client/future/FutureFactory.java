@@ -1,9 +1,11 @@
 package com.cy.rpc.client.future;
 
 
+import com.cy.rpc.common.enums.RpcErrorEnum;
 import com.cy.rpc.common.exception.RpcException;
 import com.cy.rpc.common.payload.ResultPayload;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,7 +19,7 @@ import java.util.concurrent.locks.Lock;
  */
 public class FutureFactory {
 
-    private static final Map<String, ResultFuture> futureMap = new ConcurrentHashMap(new HashMap<>());
+    private static final Map<String, ResultFuture> futureMap = Collections.synchronizedMap(new HashMap<>());
 
     public static void put(ResultFuture future) {
 
@@ -59,7 +61,7 @@ public class FutureFactory {
      * @param requestId
      * @return
      */
-    public static ResultPayload getData(String requestId) {
+    public static ResultPayload getData(String requestId, long timeout) {
         ResultFuture resultFuture = futureMap.get(requestId);
         if(resultFuture == null) {
             return null;
@@ -68,9 +70,9 @@ public class FutureFactory {
         Lock lock = resultFuture.getLock();
         lock.lock();//先锁
         try {
-            boolean await = resultFuture.getCondition().await(3000, TimeUnit.SECONDS);
+            boolean await = resultFuture.getCondition().await(timeout, TimeUnit.MILLISECONDS);
             if(!await) {
-                throw new RpcException(10002, "接口超时，未响应！");
+                throw new RpcException(RpcErrorEnum.CALL_TIME_OUT);
             }
         } catch (InterruptedException e) {
             e.printStackTrace();

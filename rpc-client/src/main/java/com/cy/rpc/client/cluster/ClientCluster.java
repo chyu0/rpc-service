@@ -1,8 +1,8 @@
 package com.cy.rpc.client.cluster;
 
 import com.cy.rpc.client.Client;
-import com.cy.rpc.client.cluster.strategy.AbstractSelector;
-import com.cy.rpc.client.cluster.strategy.RandomSelector;
+import com.cy.rpc.client.cluster.selector.AbstractSelector;
+import com.cy.rpc.client.cluster.selector.RandomSelector;
 import com.cy.rpc.common.enums.RpcErrorEnum;
 import com.cy.rpc.common.exception.RpcException;
 import io.netty.channel.EventLoopGroup;

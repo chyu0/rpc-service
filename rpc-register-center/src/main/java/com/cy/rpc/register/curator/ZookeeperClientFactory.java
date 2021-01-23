@@ -1,6 +1,5 @@
 package com.cy.rpc.register.curator;
 
-import com.cy.rpc.register.framework.ServiceCuratorFramework;
 import com.cy.rpc.register.properties.RpcServiceZookeeperProperties;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

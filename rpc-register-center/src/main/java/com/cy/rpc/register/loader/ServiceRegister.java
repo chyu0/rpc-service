@@ -1,7 +1,7 @@
 package com.cy.rpc.register.loader;
 
 import com.cy.rpc.register.curator.ZookeeperClientFactory;
-import com.cy.rpc.register.framework.ServiceCuratorFramework;
+import com.cy.rpc.register.curator.ServiceCuratorFramework;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zookeeper.Watcher;

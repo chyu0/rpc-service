@@ -1,4 +1,4 @@
-package com.cy.rpc.client.cluster.strategy;
+package com.cy.rpc.client.cluster.selector;
 
 import com.cy.rpc.client.Client;
 

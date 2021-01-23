@@ -1,6 +1,7 @@
 package com.cy.rpc.server.handler;
 
 import com.cy.rpc.common.constant.MessageConstant;
+import com.cy.rpc.common.enums.RpcErrorEnum;
 import com.cy.rpc.common.exception.RpcException;
 import com.cy.rpc.common.payload.MethodPayload;
 import com.cy.rpc.common.payload.ResultPayload;
@@ -73,7 +74,7 @@ public class RpcServerChannelHandler extends SimpleChannelInboundHandler<MethodP
                 String serviceName = methodPayload.getServiceName();
                 Object service = abstractServiceFactory.getServiceByName(serviceName);
                 if(service == null) {
-                    resultPayload.setCode(10003);
+                    resultPayload.setCode(RpcErrorEnum.SERVICE_NAME_NOT_FOUND.getCode());
                     resultPayload.setMessage("服务未找到！");
                     channelHandlerContext.channel().write(resultPayload);
                     channelHandlerContext.channel().writeAndFlush(Unpooled.copiedBuffer(MessageConstant.FINISH.getBytes()));
@@ -94,13 +95,13 @@ public class RpcServerChannelHandler extends SimpleChannelInboundHandler<MethodP
 
             }catch (RpcException e){
                 log.error("rpc 服务调用异常！", e);
-                resultPayload.setCode(10003);
+                resultPayload.setCode(e.getCode());
                 resultPayload.setMessage(e.getMessage());
                 channelHandlerContext.channel().write(resultPayload);
                 channelHandlerContext.channel().writeAndFlush(Unpooled.copiedBuffer(MessageConstant.FINISH.getBytes()));
             } catch (Exception e){
                 log.error("rpc 服务系统异常！", e);
-                resultPayload.setCode(10005);
+                resultPayload.setCode(RpcErrorEnum.INNER_ERROR.getCode());
                 resultPayload.setMessage("接口调用异常！");
                 channelHandlerContext.channel().write(null);
                 channelHandlerContext.channel().writeAndFlush(Unpooled.copiedBuffer(MessageConstant.FINISH.getBytes()));

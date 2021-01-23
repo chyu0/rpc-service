@@ -1,7 +1,7 @@
 package com.cy.rpc.register.test;
 
 import com.cy.rpc.register.curator.ZookeeperClientFactory;
-import com.cy.rpc.register.framework.ServiceCuratorFramework;
+import com.cy.rpc.register.curator.ServiceCuratorFramework;
 import com.cy.rpc.register.properties.RpcServiceZookeeperProperties;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;

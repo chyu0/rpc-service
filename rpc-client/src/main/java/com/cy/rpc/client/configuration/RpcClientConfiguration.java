@@ -1,7 +1,11 @@
 package com.cy.rpc.client.configuration;
 
+import com.cy.rpc.client.cache.ConfigCache;
+import com.cy.rpc.client.cache.RetryConnectStrategyConfig;
+import com.cy.rpc.client.cache.RpcClientConfig;
 import com.cy.rpc.client.cache.ServiceCache;
 import com.cy.rpc.client.cluster.ClientConnect;
+import com.cy.rpc.client.properties.RpcClientConfigurationProperties;
 import com.cy.rpc.common.utils.IpUtil;
 import com.cy.rpc.register.curator.ZookeeperClientFactory;
 import com.cy.rpc.register.loader.ServiceRegister;
@@ -20,14 +24,23 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-@EnableConfigurationProperties({RpcServiceZookeeperProperties.class})
+@EnableConfigurationProperties({RpcClientConfigurationProperties.class, RpcServiceZookeeperProperties.class})
 public class RpcClientConfiguration {
 
     @Resource
     private RpcServiceZookeeperProperties zookeeperProperties;
 
+    @Resource
+    private RpcClientConfigurationProperties properties;
+
     @PostConstruct
     public void init() {
+        //缓存基本的配置信息
+        ConfigCache.setRpcClientConfig(RpcClientConfig.builder().timeout(properties.getTimeout())
+                .selector(properties.getSelector()).build());
+        //设置重试策略的缓存
+        ConfigCache.setRetryConnectStrategyConfig(RetryConnectStrategyConfig.builder().retryStrategy(properties.getRetryStrategy())
+                .maxRetryTimes(properties.getMaxRetryTimes()).retryDelay(properties.getRetryDelay()).build());
 
         Set<String> interfaceCaches = ServiceCache.getInterfaceCaches();
         if(CollectionUtils.isEmpty(interfaceCaches)) {

@@ -26,7 +26,6 @@ import java.util.Set;
 public class RpcServiceScanner extends ClassPathBeanDefinitionScanner {
 
     private static final String INTERFACE_CLASS = "interfaceClass";
-    private static final String APP_NAME = "appName";
     private static final String SERVICE_NAME = "serviceName";
 
     private final ScopeMetadataResolver scopeMetadataResolver = new AnnotationScopeMetadataResolver();
