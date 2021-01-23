@@ -33,8 +33,8 @@ public class RpcProxyFactoryBean<T> implements FactoryBean<T> {
 
     @Override
     public T getObject() {
-        return CastUtils.cast(Proxy.newProxyInstance(DefaultProxy.class.getClassLoader(),
-                new Class<?>[]{interfaceClass}, new DefaultProxy(serviceName)));
+        return CastUtils.cast(Proxy.newProxyInstance(JdkInvocationProxy.class.getClassLoader(),
+                new Class<?>[]{interfaceClass}, new JdkInvocationProxy(serviceName)));
     }
 
     @Override

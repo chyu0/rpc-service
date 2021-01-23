@@ -30,13 +30,11 @@ import java.util.UUID;
 @Getter
 @Setter
 @Slf4j
-public class DefaultProxy implements InvocationHandler {
+public class JdkInvocationProxy implements InvocationHandler {
 
     private String serviceName;
 
-    private static final String SERVICE_INTERFACE_PATH = "/interface/";
-
-    public DefaultProxy(String serviceName) {
+    public JdkInvocationProxy(String serviceName) {
         this.serviceName = serviceName;
     }
 
@@ -46,16 +44,17 @@ public class DefaultProxy implements InvocationHandler {
         Class<?> clazz = method.getDeclaringClass();
 
         log.info("method: {}, clazz: {}", method.getName(), clazz);
+        //从注册中心获取class类对应的appName
         String appName = ServiceRegister.getAppName(clazz.getName());
-
+        //通过appName获取客户端集群
         ClientCluster cluster = ClientClusterCache.getCluster(appName);
 
         if(cluster == null) {
             throw new RpcException(RpcErrorEnum.CLIENT_CLUSTER_NOT_FOUND, appName + "未找到对应集群客户端");
         }
 
-        log.info("appName : {}, class ： {}, clientList : {}", appName, clazz.getName(), cluster);
-
+        log.info("appName : {}, class ： {}, cluster : {}", appName, clazz.getName(), cluster);
+        //从集群客户端获取一个client
         Client client = cluster.getClient();
         if(client == null) {
             throw new RpcException(RpcErrorEnum.REMOTE_CONNECTION_CLOSED, "远程连接已关闭" + appName);

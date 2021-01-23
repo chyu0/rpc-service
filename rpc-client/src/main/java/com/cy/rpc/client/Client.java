@@ -17,6 +17,10 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * @author chenyu3
+ * 客户端对象，专门用于进行客户端连接
+ */
 @Getter
 @Slf4j
 public class Client {
