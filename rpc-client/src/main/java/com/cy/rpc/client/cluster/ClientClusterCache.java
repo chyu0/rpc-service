@@ -52,6 +52,7 @@ public class ClientClusterCache {
             //如果客户端连接数量为0，就关闭group连接
             if(clientCluster.getClients().size() == 0) {
                 clientCluster.getEventLoopGroup().shutdownGracefully();
+                clusterMap.remove(appName);
             }
         }
     }
