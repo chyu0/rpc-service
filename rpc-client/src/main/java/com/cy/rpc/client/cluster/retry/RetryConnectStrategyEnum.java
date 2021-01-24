@@ -8,7 +8,7 @@ import lombok.Getter;
  */
 public enum RetryConnectStrategyEnum {
 
-    FixRateRetryConnectStrategy(new FixRateRetryConnectStrategy(), "随机选择器"),
+    FixRateRetryConnectStrategy(new FixRateRetryConnectStrategy(), "固定频率执行"),
     IncreaseByTimesRetryConnectStrategy(new IncreaseByTimesRetryConnectStrategy(), "按照次数递增策略");
 
     RetryConnectStrategyEnum(AbstractRetryConnectStrategy strategy, String desc) {

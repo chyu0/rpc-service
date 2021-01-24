@@ -22,9 +22,9 @@ public class ClientConnect {
     private static final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
     /**
      * 连接客户端
-     * @param appName app名称
-     * @param remoteAddress 远程连接
-     * @param port 端口
+     * @param appName 服务端对应的app名称
+     * @param remoteAddress 远程连接 例如127.0.0.1
+     * @param port 端口 例如8080
      */
     public static void connect(String appName, String remoteAddress, int port) {
         ClientCluster cluster = ClientClusterCache.put(appName, remoteAddress, port);
@@ -38,6 +38,20 @@ public class ClientConnect {
         }
     }
 
+    /**
+     * 连接客户端
+     * @param appName 服务端对应的app名称
+     * @param hostName 远程连接 例如127.0.0.1:8080
+     */
+    public static void connect(String appName, String hostName) {
+        String[] address = hostName.split(":");
+        if(address.length != 2) {
+            log.error("服务器地址有误！address:{}", hostName);
+            return ;
+        }
+        //添加到集群，并开启客户端连接
+        connect(appName, address[0], Integer.parseInt(address[1]));
+    }
 
     /**
      * 进行客户端重新连接

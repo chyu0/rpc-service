@@ -2,6 +2,10 @@ package com.cy.rpc.register.utils;
 
 import java.io.*;
 
+/**
+ * @author chenyu3
+ * 字节转对象，对象转字节
+ */
 public class ByteUtils {
 
     public static Object toObject (byte[] bytes) {

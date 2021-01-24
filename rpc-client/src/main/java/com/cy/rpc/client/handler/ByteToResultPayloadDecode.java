@@ -20,8 +20,6 @@ public class ByteToResultPayloadDecode extends ByteToMessageDecoder {
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
 
-        log.info("ByteToResultPayloadDecode decode" + in.readableBytes());
-
         if(in.readableBytes() <= 0) {
             log.error("ByteToResultPayloadDecode没有可读的字节");
             return ;

@@ -1,10 +1,6 @@
 package com.cy.rpc.client.configuration;
 
-import com.cy.rpc.client.cache.ConfigCache;
-import com.cy.rpc.client.cache.RetryConnectStrategyConfig;
-import com.cy.rpc.client.cache.RpcClientConfig;
 import com.cy.rpc.client.cache.ServiceCache;
-import com.cy.rpc.client.cluster.ClientConnect;
 import com.cy.rpc.client.properties.RpcClientConfigurationProperties;
 import com.cy.rpc.common.utils.IpUtil;
 import com.cy.rpc.register.curator.ZookeeperClientFactory;
@@ -23,6 +19,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.cy.rpc.client.cluster.ClientConnect.connect;
+
+/**
+ * @author chenyu3
+ * 注册消费者，连接服务端
+ */
 @Slf4j
 @EnableConfigurationProperties({RpcClientConfigurationProperties.class, RpcServiceZookeeperProperties.class})
 public class RpcClientConfiguration {
@@ -30,19 +32,8 @@ public class RpcClientConfiguration {
     @Resource
     private RpcServiceZookeeperProperties zookeeperProperties;
 
-    @Resource
-    private RpcClientConfigurationProperties properties;
-
     @PostConstruct
     public void init() {
-        //缓存基本的配置信息
-        ConfigCache.setRpcClientConfig(RpcClientConfig.builder().timeout(properties.getTimeout())
-                .selector(properties.getSelector()).build());
-        //设置重试策略的缓存
-        ConfigCache.setRetryConnectStrategyConfig(RetryConnectStrategyConfig.builder().retryStrategy(properties.getRetryStrategy())
-                .maxRetryTimes(properties.getMaxRetryTimes()).retryDelay(properties.getRetryDelay())
-                .maxRetryDelay(properties.getMaxRetryDelay()).build());
-
         Set<String> interfaceCaches = ServiceCache.getInterfaceCaches();
         if(CollectionUtils.isEmpty(interfaceCaches)) {
             return ;
@@ -82,7 +73,11 @@ public class RpcClientConfiguration {
                 }
             });
 
-            appHostMap.putAll(hostNames);
+            //合并
+            hostNames.forEach((key, value) -> appHostMap.merge(key, value, (v1, v2) -> {
+                v1.addAll(v2);
+                return v1;
+            }));
         }
 
         //连接到客户端
@@ -91,25 +86,6 @@ public class RpcClientConfiguration {
                 connect(key, item);
             });
         });
-    }
-
-    /**
-     * 连接客户端，加个同步，虽然貌似没有必要
-     * @param appName
-     * @param hostName
-     */
-    private void connect(String appName, String hostName) {
-        try {
-            String[] address = hostName.split(":");
-            if(address.length != 2) {
-                log.warn("服务器地址有误！address:{}", hostName);
-            }
-            //添加到集群，并开启客户端连接
-            ClientConnect.connect(appName, address[0], Integer.parseInt(address[1]));
-            log.warn("客户端连接成功！address: {}", hostName);
-        }catch (Exception e){
-            log.error("RPC服务启动异常！", e);
-        }
     }
 
 }

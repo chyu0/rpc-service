@@ -30,7 +30,6 @@ public class ResultPayloadToByteEncode extends MessageToByteEncoder<ResultPayloa
         byte[] result = ByteUtils.toByteArray(msg.getResult());
         byteBuf.writeInt(result.length).writeBytes(result);
 
-        log.info("ResultPayloadToByteEncode encode" + byteBuf.readableBytes());
         out.writeInt(byteBuf.readableBytes());
         out.writeBytes(byteBuf);
 

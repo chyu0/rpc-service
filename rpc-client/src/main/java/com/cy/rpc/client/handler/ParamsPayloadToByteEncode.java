@@ -56,8 +56,6 @@ public class ParamsPayloadToByteEncode extends MessageToByteEncoder<MethodPayloa
             byteBuf.writeInt(0);
         }
 
-
-        log.info("ParamsPayloadToByteEncode encode" + byteBuf.readableBytes() + " " + System.currentTimeMillis());
         out.writeInt(byteBuf.readableBytes());
         out.writeBytes(byteBuf);
 

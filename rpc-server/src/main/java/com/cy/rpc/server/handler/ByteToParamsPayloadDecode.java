@@ -20,7 +20,6 @@ public class ByteToParamsPayloadDecode extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
-        log.info("ByteToParamsPayloadDecode decode: {}" , in.readableBytes());
 
         if(in.readableBytes() <= 0) {
             log.error("ByteToParamsPayloadDecode没有可读的字节");

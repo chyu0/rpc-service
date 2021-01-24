@@ -12,13 +12,17 @@ import org.springframework.util.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 
-
+/**
+ * @author chenyu3
+ * rpc 服务开启 ，可参考EnableCache
+ */
 public class RpcServiceConfigurationSelector implements ImportSelector {
 
     private static final String RPC_SERVER_CONFIGURATION_CLASS = "com.cy.rpc.server.configuration.RpcServerConfiguration";
 
     private static final String RPC_CLIENT_CONFIGURATION_CLASS = "com.cy.rpc.client.configuration.RpcClientConfiguration";
 
+    private static final String RPC_CLIENT_CONSTANT_CONFIGURATION_CLASS = "com.cy.rpc.client.configuration.RpcClientConstantConfiguration";
 
     public static final String DEFAULT_ATTRIBUTE_NAME = "mode";
 
@@ -65,6 +69,7 @@ public class RpcServiceConfigurationSelector implements ImportSelector {
     private String[] getClientImports() {
         List<String> result = new ArrayList<>();
         result.add(RPC_CLIENT_CONFIGURATION_CLASS);
+        result.add(RPC_CLIENT_CONSTANT_CONFIGURATION_CLASS);
         return StringUtils.toStringArray(result);
     }
 
