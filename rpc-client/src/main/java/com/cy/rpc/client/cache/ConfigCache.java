@@ -28,7 +28,7 @@ public class ConfigCache {
      * 获取rpc client基本配置
      */
     public static RpcClientConfig getRpcClientConfig() {
-        return rpcClientConfig != null ? rpcClientConfig : RpcClientConfig.builder().build();
+        return rpcClientConfig != null ? rpcClientConfig : new RpcClientConfig();
     }
 
     /**
@@ -43,6 +43,6 @@ public class ConfigCache {
      * 获取rpc client基本配置
      */
     public static RetryConnectStrategyConfig getRetryConnectStrategyConfig() {
-        return retryConnectStrategyConfig != null ? retryConnectStrategyConfig : RetryConnectStrategyConfig.builder().build();
+        return retryConnectStrategyConfig != null ? retryConnectStrategyConfig : new RetryConnectStrategyConfig();
     }
 }

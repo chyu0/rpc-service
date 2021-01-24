@@ -6,7 +6,7 @@ package com.cy.rpc.client.cluster.retry;
  */
 public class FixRateRetryConnectStrategy extends AbstractRetryConnectStrategy {
     @Override
-    public long calculationNextExecuteDelay(long delay, int times) {
-        return delay;
+    public long calculationNextExecuteDelay(long delay, long maxDelay, int times) {
+        return Math.min(delay, maxDelay);
     }
 }

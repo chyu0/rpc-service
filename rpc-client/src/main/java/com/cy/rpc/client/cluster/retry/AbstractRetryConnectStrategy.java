@@ -10,6 +10,6 @@ public abstract class AbstractRetryConnectStrategy {
      * 计算连接重试时间间隔
      * @return
      */
-    public abstract long calculationNextExecuteDelay(long delay, int times);
+    public abstract long calculationNextExecuteDelay(long delay, long maxDelay, int times);
 
 }

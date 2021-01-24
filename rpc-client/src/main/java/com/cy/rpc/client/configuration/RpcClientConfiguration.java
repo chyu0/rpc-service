@@ -40,7 +40,8 @@ public class RpcClientConfiguration {
                 .selector(properties.getSelector()).build());
         //设置重试策略的缓存
         ConfigCache.setRetryConnectStrategyConfig(RetryConnectStrategyConfig.builder().retryStrategy(properties.getRetryStrategy())
-                .maxRetryTimes(properties.getMaxRetryTimes()).retryDelay(properties.getRetryDelay()).build());
+                .maxRetryTimes(properties.getMaxRetryTimes()).retryDelay(properties.getRetryDelay())
+                .maxRetryDelay(properties.getMaxRetryDelay()).build());
 
         Set<String> interfaceCaches = ServiceCache.getInterfaceCaches();
         if(CollectionUtils.isEmpty(interfaceCaches)) {

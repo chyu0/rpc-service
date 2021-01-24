@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author chenyu3
@@ -114,11 +115,15 @@ public class ClientCluster {
      * @return 客户端连接
      */
     public Client getClient() {
-        if(CollectionUtils.isEmpty(clients)) {
+        //过滤掉未激活的客户端，即正在重新连接的客户端
+        Set<Client> filterNoActive = clients.stream().
+                filter(item -> item.getSocketChannel() != null && item.getSocketChannel().isActive()).collect(Collectors.toSet());
+
+        if(CollectionUtils.isEmpty(filterNoActive)) {
             throw new RpcException(RpcErrorEnum.CLIENT_NOT_FOUND);
         }
 
-        return selector.getClient(clients);
+        return selector.getClient(filterNoActive);
     }
 
     /**

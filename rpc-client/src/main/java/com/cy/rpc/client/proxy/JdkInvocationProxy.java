@@ -54,29 +54,34 @@ public class JdkInvocationProxy implements InvocationHandler {
         ClientCluster cluster = ClientClusterCache.getCluster(appName);
 
         if(cluster == null) {
+            log.error("appName : {}, class ： {} 获取集群配置为空", appName, clazz.getName());
             throw new RpcException(RpcErrorEnum.CLIENT_CLUSTER_NOT_FOUND, appName + "未找到对应集群客户端");
         }
 
-        log.info("appName : {}, class ： {}, cluster : {}", appName, clazz.getName(), cluster);
         //从集群客户端获取一个client
         Client client = cluster.getClient();
         if(client == null) {
+            log.error("appName : {}, class ： {}, cluster : {} 获取客户端失败！", appName, clazz.getName(), cluster);
             throw new RpcException(RpcErrorEnum.REMOTE_CONNECTION_CLOSED, "远程连接已关闭" + appName);
         }
 
         RpcService rpcService = method.getDeclaringClass().getAnnotation(RpcService.class);
         if(rpcService == null) {
+            log.error("appName : {}, class ： {} 未配置RpcService", appName, clazz.getName());
             throw new RpcException(RpcErrorEnum.PRC_SERVICE_IS_NULL);
         }
 
         String[] serviceNames = rpcService.value();
 
         if(StringUtils.isBlank(serviceName)) {
+            log.info("appName : {}, class ： {} 未获取到serviceName，取默认值", appName, clazz.getName());
             serviceName = rpcService.defaultValue();
         }else if(Arrays.stream(serviceNames).noneMatch(item -> item.equals(serviceName))) {
+            log.info("appName : {}, class ： {}, serviceName : {} 未匹配到serviceName", appName, clazz.getName(), serviceNames);
             throw new RpcException(RpcErrorEnum.SERVICE_NAME_NO_MATCH);
         }
 
+        log.info("appName : {}, class ： {}, client : {}, cluster : {} 开始调用", appName, clazz.getName(), client, cluster);
         MethodPayload methodPayload = new MethodPayload();
         methodPayload.setMethod(method.getName());
 
@@ -95,9 +100,16 @@ public class JdkInvocationProxy implements InvocationHandler {
         client.getSocketChannel().writeAndFlush(Unpooled.copiedBuffer(MessageConstant.FINISH.getBytes()));
 
         ResultPayload resultPayload = FutureFactory.getData(requestId, ConfigCache.getRpcClientConfig().getTimeout());
-        log.info("DefaultProxy 接口返回结果："+ resultPayload);
+        log.info("appName : {}, class ： {}, client : {} 接口返回结果：{}", appName, clazz.getName(), client, resultPayload);
 
-        return resultPayload != null ? resultPayload.getResult() : null;
+        //处理返回结果
+        if(resultPayload == null) {
+            throw new RpcException(RpcErrorEnum.CALL_EXCEPTION, "结果为null");
+        }else if(!resultPayload.isSuccess()) {
+            throw new RpcException(resultPayload.getCode(), resultPayload.getMessage());
+        }
+
+        return resultPayload.getResult();
     }
 
 }

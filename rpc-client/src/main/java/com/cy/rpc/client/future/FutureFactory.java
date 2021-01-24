@@ -76,7 +76,7 @@ public class FutureFactory {
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }finally{
+        } finally{
             lock.unlock();//释放锁
             futureMap.remove(requestId);
         }

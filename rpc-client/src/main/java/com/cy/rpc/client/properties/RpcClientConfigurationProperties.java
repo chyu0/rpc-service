@@ -34,4 +34,9 @@ public class RpcClientConfigurationProperties {
      */
     private long retryDelay = 10000;
 
+    /**
+     * 最大重试延迟
+     */
+    private long maxRetryDelay = 20000;
+
 }

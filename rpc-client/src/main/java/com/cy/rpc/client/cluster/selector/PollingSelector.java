@@ -11,7 +11,7 @@ import java.util.Set;
 public class PollingSelector extends AbstractSelector {
 
     //当前轮询的索引
-    private volatile int index = 0;
+    private int index = 0;
 
     @Override
     public synchronized Client getClient(Set<Client> clients) {

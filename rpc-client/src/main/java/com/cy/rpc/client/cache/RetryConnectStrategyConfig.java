@@ -30,6 +30,11 @@ public class RetryConnectStrategyConfig {
     private long retryDelay;
 
     /**
+     * 最大重试时间间隔
+     */
+    private long maxRetryDelay;
+
+    /**
      * 初始化
      */
     public RetryConnectStrategyConfig() {
@@ -70,6 +75,11 @@ public class RetryConnectStrategyConfig {
          */
         private long retryDelay = 10000;
 
+        /**
+         * 最大重试的时间间隔
+         */
+        private long maxRetryDelay = 20000;
+
 
         public Builder maxRetryTimes(int maxRetryTimes) {
             this.maxRetryTimes = maxRetryTimes;
@@ -83,6 +93,11 @@ public class RetryConnectStrategyConfig {
 
         public Builder retryDelay(long retryDelay) {
             this.retryDelay = retryDelay;
+            return this;
+        }
+
+        public Builder maxRetryDelay(long maxRetryDelay) {
+            this.maxRetryDelay = maxRetryDelay;
             return this;
         }
 
@@ -106,6 +121,6 @@ public class RetryConnectStrategyConfig {
      * @return
      */
     public long calculationNextExecuteDelay(int times) {
-        return retryStrategy.calculationNextExecuteDelay(retryDelay, times);
+        return retryStrategy.calculationNextExecuteDelay(retryDelay, maxRetryTimes, times);
     }
 }

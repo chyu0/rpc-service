@@ -20,7 +20,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 
 /**
- * @author chenyu3
+ * @author chenyu3, 参考MapperScanner
  * rpc服务扫描器，扫描包含RPCService注解的类
  */
 public class RpcServiceScanner extends ClassPathBeanDefinitionScanner {
