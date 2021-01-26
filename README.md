@@ -1,15 +1,15 @@
 #rpc-service Rpc远程服务调用
 
 ##测试依赖项
-rpc-client-test：服务调用方，客户端（也可以做服务提供方，@EnableRpcService(mode = RpcMode.ALL)）
-rpc-server-test：服务提供方，服务端（定义为只对外提供服务，@EnableRpcService(mode = RpcMode.SERVER)）
-rpc-server-facade，rpc-server-facade2：facade接口，提供给客户端的依赖，由服务端进行具体实现
+- rpc-client-test：服务调用方，客户端（也可以做服务提供方，@EnableRpcService(mode = RpcMode.ALL)）
+- rpc-server-test：服务提供方，服务端（定义为只对外提供服务，@EnableRpcService(mode = RpcMode.SERVER)） 
+- rpc-server-facade，rpc-server-facade2：facade接口，提供给客户端的依赖，由服务端进行具体实现
 
 ##核心实现
-rpc-common：包含rpc-server及rpc-client基本依赖，稍后详细说明
-rpc-client：客户端具体实现，稍后详细说明
-rpc-server：服务端具体实现，稍后详细说明
-rpc-register-center：服务注册中心，稍后详细说明
+- rpc-common：包含rpc-server及rpc-client基本依赖，稍后详细说明
+- rpc-client：客户端具体实现，稍后详细说明
+- rpc-server：服务端具体实现，稍后详细说明
+- rpc-register-center：服务注册中心，稍后详细说明
 
 
 ##rpc-register-center
