@@ -14,6 +14,11 @@ import java.nio.charset.Charset;
 @Slf4j
 public class ClientHeartPongHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
+    /**
+     * 该方法主要消费服务端返回的心跳消息，不可缺省
+     * @param channelHandlerContext ChannelHandlerContext
+     * @param byteBuf RECEIVE
+     */
     @Override
     public void channelRead0(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf) {
         String message = byteBuf.toString(Charset.defaultCharset());

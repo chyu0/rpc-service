@@ -71,7 +71,7 @@
     - ByteToResultPayloadDecode：将字节码解码成为ResultPayload对象，进行解析
     - ParamsPayloadToByteEncode：将请求的信息编码成MethodPayload进行发送
     - RpcClientChannelHandler：接受服务端返回的ResultPayload结果，并通知future
-    - ClientHeartPingHandler：客户端监听active和inactive事件，进行定时发送心跳检测和重连
+    - ClientInactiveHandler：客户端监听inactive事件，并进行重连
     - ClientHeartPongHandler：客户端收到服务端返回的心跳信息
     - ClientIdleStateHandler：监听超时读、超时写、服务端连接断开的事件，并作出相应的处理
     - DelimiterBasedFrameDecoder：Netty封装的防粘包handler，也要加入到pipeline中

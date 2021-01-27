@@ -3,6 +3,8 @@ package com.cy.rpc.common.payload;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Arrays;
+
 @Getter
 @Setter
 public class MethodPayload {
@@ -22,4 +24,12 @@ public class MethodPayload {
     //请求id
     private String requestId;
 
+    @Override
+    public String toString() {
+        return  "{ requestId = " + requestId + " ," +
+                "method = " + method + " ," +
+                "argClass = " + Arrays.toString(argsClass) + " ," +
+                "args = " + Arrays.toString(args) + " ," +
+                "serviceName = " + serviceName + " }";
+    }
 }

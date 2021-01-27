@@ -62,11 +62,11 @@ public class Client {
                         @Override
                         protected void initChannel(SocketChannel socketChannel) {
                             socketChannel.pipeline()
-                                    .addLast(new IdleStateHandler(60, 60, 0, TimeUnit.SECONDS))
+                                    .addLast(new IdleStateHandler(60, 15, 0, TimeUnit.SECONDS))
                                     .addLast(new DelimiterBasedFrameDecoder(1024 * 10, Unpooled.copiedBuffer(MessageConstant.FINISH.getBytes())))
                                     .addLast(new ParamsPayloadToByteEncode())
                                     .addLast(new ByteToResultPayloadDecode())
-                                    .addLast(new ClientHeartPingHandler(appName))
+                                    .addLast(new ClientInactiveHandler(appName))
                                     .addLast(new ClientIdleStateHandler())
                                     .addLast(new ClientHeartPongHandler())
                                     .addLast(new RpcClientChannelHandler());

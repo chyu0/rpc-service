@@ -121,6 +121,6 @@ public class RetryConnectStrategyConfig {
      * @return
      */
     public long calculationNextExecuteDelay(int times) {
-        return retryStrategy.calculationNextExecuteDelay(retryDelay, maxRetryTimes, times);
+        return retryStrategy.calculationNextExecuteDelay(retryDelay, maxRetryDelay, times);
     }
 }

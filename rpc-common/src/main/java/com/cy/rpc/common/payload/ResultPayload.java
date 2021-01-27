@@ -23,4 +23,14 @@ public class ResultPayload implements Serializable {
 
     //是否成功
     private boolean success;
+
+
+    @Override
+    public String toString() {
+        return  "{ requestId = " + requestId + " ," +
+                "code = " + code + " ," +
+                "message = " + message + " ," +
+                "success = " + success + " ," +
+                "result = " + result + " }";
+    }
 }

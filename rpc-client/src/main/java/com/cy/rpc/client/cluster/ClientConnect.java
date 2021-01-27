@@ -46,32 +46,11 @@ public class ClientConnect {
     public static void connect(String appName, String hostName) {
         String[] address = hostName.split(":");
         if(address.length != 2) {
-            log.error("服务器地址有误！address:{}", hostName);
+            log.error("服务器地址有误 appName:{}, address:{}", appName, hostName);
             return ;
         }
         //添加到集群，并开启客户端连接
         connect(appName, address[0], Integer.parseInt(address[1]));
-    }
-
-    /**
-     * 进行客户端重新连接
-     * @param remoteAddress 远程地址
-     * @param port 端口
-     */
-    public static void tryConnect(String appName, String remoteAddress, int port) {
-        ClientCluster cluster = ClientClusterCache.getCluster(appName);
-        if(cluster == null) {
-            log.warn("未找到客户端集群，重连失败！，appName: {}， remoteAddress : {}, port : {}", appName, remoteAddress, port);
-            return ;
-        }
-
-        Client client = cluster.getClient(remoteAddress, port);
-        if(client == null) {
-            log.warn("未找到客户端连接，重连失败！，remoteAddress : {}, port : {}", remoteAddress, port);
-            return ;
-        }
-        //客户端重连
-        executeRetryConnect(cluster.getEventLoopGroup(), appName, client);
     }
 
     /**
@@ -105,7 +84,7 @@ public class ClientConnect {
         //超过最大重试次数的话，就把这个客户端移除掉，重试的目的一个是为了避免网络波动，服务端短暂下线的情况
         //正常情况下重试必须存在，否则会有未知的问题
         if(client.getConnectTimes() >= strategyConfig.getMaxRetryTimes()) {
-            log.error("连接超时，断开连接，client:{}" , client);
+            log.error("连接次数已超过最大重试次数，连接超时，直接关闭连接，删除集群的客户端，client:{}" , client);
             //移除该客户端的集群配置
             ClientClusterCache.remove(appName, client.getRemoteAddress(), client.getPort());
             ServiceCache.removeAppCache(appName, StringUtils.joinWith(":", client.getRemoteAddress(), client.getPort()));
@@ -115,11 +94,12 @@ public class ClientConnect {
         //通过策略计算每次需要等待的时间
         scheduledExecutorService.schedule(() -> {
             log.info("客户端重连开始！appName: {}, client: {}", appName, client.toString());
-            if(!client.connect(eventLoopGroup)) {
-                log.warn("客户端重连失败{}次！appName: {}, client: {}", client.getConnectTimes(), appName, client);
+            if(client.connect(eventLoopGroup)) {
+                log.info("客户端重连成功！appName: {}, client: {}", appName, client.toString());
+            }else {
+                log.warn("客户端重连失败{}次，准备继续重试！appName: {}, client: {}", client.getConnectTimes(), appName, client);
                 executeRetryConnect(eventLoopGroup, appName, client);
             }
-            log.info("客户端重连结束！appName: {}, client: {}", appName, client.toString());
         }, strategyConfig.calculationNextExecuteDelay(client.getConnectTimes()), TimeUnit.MILLISECONDS);
     }
 
