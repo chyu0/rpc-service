@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.cy.rpc.client.cluster.ClientConnect.connect;
+import static com.cy.rpc.client.cluster.ClientConnector.connect;
 
 /**
  * @author chenyu3

@@ -2,7 +2,7 @@ package com.cy.rpc.client.handler;
 
 import com.cy.rpc.client.cluster.ClientCluster;
 import com.cy.rpc.client.cluster.ClientClusterCache;
-import com.cy.rpc.client.cluster.ClientConnect;
+import com.cy.rpc.client.cluster.ClientConnector;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.SocketChannel;
@@ -30,7 +30,7 @@ public class ClientInactiveHandler extends ChannelInboundHandlerAdapter {
         ClientCluster cluster = ClientClusterCache.getCluster(appName);
         if(cluster != null) {
             log.info("客户端准备重新连接到服务端，localAddress：{}", localAddress);
-            ClientConnect.tryConnect(appName, localAddress);
+            ClientConnector.tryConnect(appName, localAddress);
         }else {
             log.info("没有客户端集群，无法重连，客户端连接直接关闭，localAddress：{}", localAddress);
             ctx.close();

@@ -102,6 +102,7 @@
         <module>rpc-client-test</module>
         <module>rpc-server-test</module>
 		<module>rpc-server-facade</module>
+        <module>rpc-logger</module>
         <module>rpc-server-facade2</module>
     </modules>
 

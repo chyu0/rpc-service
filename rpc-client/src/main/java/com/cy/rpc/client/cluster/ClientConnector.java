@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
  * 对客户端进行连接
  */
 @Slf4j
-public class ClientConnect {
+public class ClientConnector {
 
     private static final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
     /**
