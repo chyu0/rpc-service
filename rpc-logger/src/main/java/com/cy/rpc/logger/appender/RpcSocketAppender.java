@@ -25,18 +25,15 @@ public class RpcSocketAppender extends AppenderBase<ILoggingEvent> {
     public void start() {
         socket = new LoggerSocket("localhost", 1111);
         try {
-            if(socket.connect()) {
-                this.addInfo("");
-            }
+            socket.connect();
         }catch (Exception e){
-
+            e.printStackTrace();
         }
         super.start();
     }
 
     @Override
     protected void append(ILoggingEvent iLoggingEvent) {
-        socket.getSocketChannel().write(iLoggingEvent);
-        socket.getSocketChannel().writeAndFlush("$FINISH$");
+        socket.getSocketChannel().writeAndFlush(iLoggingEvent);
     }
 }

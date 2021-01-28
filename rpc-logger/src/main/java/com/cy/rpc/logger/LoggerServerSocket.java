@@ -1,16 +1,14 @@
 package com.cy.rpc.logger;
 
+import com.cy.rpc.logger.handler.ILoggingEventDecoder;
 import com.cy.rpc.logger.handler.RpcServerChannelHandler;
-import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.Unpooled;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.ServerSocketChannel;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.DelimiterBasedFrameDecoder;
-import io.netty.handler.codec.string.StringDecoder;
+import io.netty.channel.socket.nio.NioDatagramChannel;
 
 import java.net.InetSocketAddress;
 
@@ -28,24 +26,22 @@ public class LoggerServerSocket {
         this.port = port;
     }
 
-    public ServerSocketChannel start() throws Exception{
-        EventLoopGroup bossGroup = new NioEventLoopGroup();
-        EventLoopGroup workGroup = new NioEventLoopGroup();
+    public NioDatagramChannel start() throws Exception{
+        EventLoopGroup group = new NioEventLoopGroup();
 
-        ServerBootstrap bootstrap = new ServerBootstrap();
+        Bootstrap bootstrap = new Bootstrap();
 
-        bootstrap.group(bossGroup, workGroup).channel(NioServerSocketChannel.class)
-                .localAddress(new InetSocketAddress(port)).childHandler(new ChannelInitializer<SocketChannel>() {
+        bootstrap.group(group).channel(NioDatagramChannel.class)
+                .localAddress(new InetSocketAddress(port)).handler(new ChannelInitializer<Channel>() {
             @Override
-            protected void initChannel(SocketChannel channel) throws Exception {
+            protected void initChannel(Channel channel) {
                 channel.pipeline()
-                        .addLast(new DelimiterBasedFrameDecoder(1024 * 10, Unpooled.copiedBuffer(FINISH.getBytes())))
-                        .addLast(new StringDecoder())
-                        .addLast(new RpcServerChannelHandler())
-                ;
+                        .addLast(new ILoggingEventDecoder())
+                        .addLast(new RpcServerChannelHandler());
             }
         });
-        return (ServerSocketChannel) bootstrap.bind().sync().channel();
+        bootstrap.option(ChannelOption.SO_BROADCAST, true);
+        return (NioDatagramChannel) bootstrap.bind().sync().channel();
     }
 
 
